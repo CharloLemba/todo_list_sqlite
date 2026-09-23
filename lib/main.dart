@@ -35,7 +35,7 @@ class _ToDoHomePageState extends State<ToDoHomePage> {
       appBar: AppBar(
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
-        title: const Text("To-Do List SQLite (Modular)"),
+        title: const Text("To-Do List SQLite"),
         centerTitle: true,
       ),
       // Mengambil data secara asynchronous dari SQLite
@@ -50,7 +50,7 @@ class _ToDoHomePageState extends State<ToDoHomePage> {
             return const Center(
               child: Text(
                 "Belum ada To-Do. Silakan tambah data! 🗿",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 20, color: Colors.grey),
               ),
             );
           }

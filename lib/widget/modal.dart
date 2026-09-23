@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:todo_list_sqlite/model/model_todo.dart';
 
 class TodoModal {
-  // ==========================================
-  // MODAL FORM TAMBAH / EDIT TO-DO
-  // ==========================================
+  /*
+   MODAL FORM TAMBAH / EDIT TO-DO
+  */
   static void showForm(
     BuildContext context, {
     ToDo? todoItem,
@@ -105,9 +105,9 @@ class TodoModal {
     );
   }
 
-  // ==========================================
-  // DIALOG KONFIRMASI HAPUS
-  // ==========================================
+  /*
+   DIALOG KONFIRMASI HAPUS
+  */
   static void showDeleteDialog(
     BuildContext context, {
     required VoidCallback onDelete,
