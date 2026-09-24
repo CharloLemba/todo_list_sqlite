@@ -33,37 +33,40 @@ class DatabaseHelper {
     );
   }
 
-  // Fungsi CREATE (Menambah Data baru ke database)
+  // Fungsi CREATE (Menambah Data baru ke database dengan SQL Murni)
   Future<int> insertToDo(ToDo todo) async {
     final db = await instance.database;
-    return await db.insert(
-      'todo_list',
-      todo.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+    // Menggunakan rawInsert dengan placeholder '?' untuk keamanan terhadap SQL Injection
+    return await db.rawInsert(
+      'INSERT INTO todo_list (judul, todo) VALUES (?, ?)',
+      [todo.judul, todo.todo],
     );
   }
 
-  // Fungsi READ (Mengambil / Membaca Semua Data dari database)
+  // Fungsi READ (Mengambil / Membaca Semua Data dari database dengan SQL Murni)
   Future<List<ToDo>> getToDo() async {
     final db = await instance.database;
-    final result = await db.query('todo_list');
+    // Menggunakan rawQuery untuk SELECT semua data
+    final List<Map<String, dynamic>> result = await db.rawQuery(
+      'SELECT * FROM todo_list',
+    );
     return result.map((json) => ToDo.fromMap(json)).toList();
   }
 
-  // Fungsi UPDATE (Mengubah / Memperbarui Data yang sudah ada berdasarkan ID)
+  // Fungsi UPDATE (Mengubah / Memperbarui Data berdasarkan ID dengan SQL Murni)
   Future<int> updateToDo(ToDo todo) async {
     final db = await instance.database;
-    return await db.update(
-      'todo_list',
-      todo.toMap(),
-      where: 'id = ?',
-      whereArgs: [todo.id],
+    // Menggunakan rawUpdate
+    return await db.rawUpdate(
+      'UPDATE todo_list SET judul = ?, todo = ? WHERE id = ?',
+      [todo.judul, todo.todo, todo.id],
     );
   }
 
-  // Fungsi DELETE (Menghapus Data dari database berdasarkan ID tertentu)
+  // Fungsi DELETE (Menghapus Data dari database berdasarkan ID tertentu dengan SQL Murni)
   Future<int> deleteToDo(int id) async {
     final db = await instance.database;
-    return await db.delete('todo_list', where: 'id = ?', whereArgs: [id]);
+    // Menggunakan rawDelete
+    return await db.rawDelete('DELETE FROM todo_list WHERE id = ?', [id]);
   }
 }
