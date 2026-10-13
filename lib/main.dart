@@ -2,17 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:todo_list_sqlite/model/model_todo.dart';
 import 'package:todo_list_sqlite/database/database_helper.dart';
 import 'package:todo_list_sqlite/widget/modal.dart';
+import 'package:todo_list_sqlite/database/sp.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SharedPreferencesHelper.init();
   runApp(const MainApp());
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
   @override
+  State<MainApp> createState() => _MainAppState();
+
+  // Helper static untuk mengakses state dari widget di bawahnya jika diperlukan
+  static _MainAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<_MainAppState>();
+}
+
+class _MainAppState extends State<MainApp> {
+  bool _isDarkTheme = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ambil preferensi tema yang tersimpan saat aplikasi pertama kali dibuka
+    _isDarkTheme = SharedPreferencesHelper.getBool("isDarkTheme") ?? false;
+  }
+
+  // Fungsi untuk mengubah tema secara global
+  void toggleTheme() {
+    setState(() {
+      _isDarkTheme = !_isDarkTheme;
+      SharedPreferencesHelper.setBool("isDarkTheme", _isDarkTheme);
+    });
+  }
+
+  bool get isDarkTheme => _isDarkTheme;
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: ToDoHomePage());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: _isDarkTheme ? ThemeMode.dark : ThemeMode.light,
+      home: const ToDoHomePage(),
+    );
   }
 }
 
@@ -24,19 +61,31 @@ class ToDoHomePage extends StatefulWidget {
 }
 
 class _ToDoHomePageState extends State<ToDoHomePage> {
-  // Fungsi buat nge-refresh tampilan UI
+  // Fungsi buat nge-refresh tampilan UI data SQLite
   void _refreshData() {
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    // Mengecek status tema saat ini dari MainApp
+    final mainAppState = MainApp.of(context);
+    final isDark = mainAppState?.isDarkTheme ?? false;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         title: const Text("To-Do List SQLite"),
         centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {
+              mainAppState?.toggleTheme();
+            },
+            icon: Icon(isDark ? Icons.sunny : Icons.nightlight),
+          ),
+        ],
       ),
       // Mengambil data secara asynchronous dari SQLite
       body: FutureBuilder<List<ToDo>>(
@@ -51,6 +100,7 @@ class _ToDoHomePageState extends State<ToDoHomePage> {
               child: Text(
                 "Belum ada To-Do. Silakan tambah data! 🗿",
                 style: TextStyle(fontSize: 20, color: Colors.grey),
+                textAlign: TextAlign.center,
               ),
             );
           }
@@ -75,15 +125,14 @@ class _ToDoHomePageState extends State<ToDoHomePage> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Tombol Edit (Manggil modal dari file modal.dart)
+                        // Tombol Edit
                         IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.black),
+                          icon: const Icon(Icons.edit, color: Colors.blue),
                           onPressed: () {
                             TodoModal.showForm(
                               context,
                               todoItem: item,
                               onSave: (judulBaru, todoBaru) async {
-                                // Eksekusi update database
                                 await DatabaseHelper.instance.updateToDo(
                                   ToDo(
                                     id: item.id,
@@ -97,14 +146,13 @@ class _ToDoHomePageState extends State<ToDoHomePage> {
                           },
                         ),
                         const SizedBox(width: 5),
-                        // Tombol Delete (Manggil dialog hapus dari file modal.dart)
+                        // Tombol Delete
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () {
                             TodoModal.showDeleteDialog(
                               context,
                               onDelete: () async {
-                                // Eksekusi delete database berdasarkan ID
                                 await DatabaseHelper.instance.deleteToDo(
                                   item.id!,
                                 );
@@ -128,7 +176,6 @@ class _ToDoHomePageState extends State<ToDoHomePage> {
           TodoModal.showForm(
             context,
             onSave: (judulBaru, todoBaru) async {
-              // Eksekusi insert database
               await DatabaseHelper.instance.insertToDo(
                 ToDo(id: null, judul: judulBaru, todo: todoBaru),
               );
